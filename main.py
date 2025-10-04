@@ -72,16 +72,34 @@ def read_file(file_path: str) -> str:
 
 
 def sanitize_filename(filename: str) -> str:
-    """Make a filename safe for saving to disk."""
-    filename = urllib.parse.unquote(filename)  # Decode URL-encoded characters
-    filename = os.path.basename(filename)  # Keep only the filename (remove path)
-    base_name, extension = os.path.splitext(filename)  # Split into name and extension
-    safe_name = re.sub(
-        r"[^\w\-\.]", "_", base_name
-    )  # Replace unsafe chars with underscores
-    if extension.lower() != ".pdf":  # Ensure correct extension
+    """Make a filename safe for saving to disk (only a-z, A-Z, 0-9, and _)."""
+    # Decode URL-encoded characters
+    filename = urllib.parse.unquote(filename)
+
+    # Keep only the filename (remove any directory parts)
+    filename = os.path.basename(filename)
+
+    # Split into base name and extension
+    base_name, extension = os.path.splitext(filename)
+
+    # Replace anything not A-Z, a-z, 0-9, or _ with _
+    safe_name = re.sub(r"[^A-Za-z0-9_]", "_", base_name)
+
+    # Collapse multiple underscores into one
+    safe_name = re.sub(r"_+", "_", safe_name)
+
+    # Strip leading/trailing underscores
+    safe_name = safe_name.strip("_")
+
+    # Default to "file" if empty after sanitization
+    if not safe_name:
+        return ""
+
+    # Keep .pdf if already present (case-insensitive), otherwise force .pdf
+    if extension.lower() != ".pdf":
         extension = ".pdf"
-    return safe_name + extension  # Return safe name with .pdf
+
+    return safe_name + extension
 
 
 def download_pdf_file(pdf_url: str, save_directory: str) -> None:
@@ -91,6 +109,11 @@ def download_pdf_file(pdf_url: str, save_directory: str) -> None:
     parsed_url = urllib.parse.urlparse(pdf_url)  # Parse URL
     raw_filename = os.path.basename(parsed_url.path)  # Extract file name from URL path
     safe_filename = sanitize_filename(raw_filename)  # Sanitize file name
+    if safe_filename == "":
+        print(
+            f"[WARNING] Skipped download (invalid url) {pdf_url} (invalid filename): {raw_filename}"
+        )
+        return  # Skip if filename is empty after sanitization
     save_path = os.path.join(save_directory, safe_filename)  # Full save path
 
     if os.path.exists(save_path):  # Skip if already exists
