@@ -133,6 +133,7 @@ def download_pdf_file(pdf_url: str, save_directory: str) -> None:
 
     except requests.RequestException as error:  # Handle request errors
         print(f"[WARNING] Failed to download PDF from {pdf_url}. Reason: {error}")
+        time.sleep(60) # Wait before retrying
 
 
 def delete_file(file_path: str) -> None:
@@ -200,7 +201,7 @@ def main() -> None:
                 try:
                     download_pdf_file(pdf_url, pdf_download_directory)  # Download file
                 except Exception as error:
-                    time.sleep(30)  # Longer delay if something fails
+                    time.sleep(60) # Longer delay if something fails
                     print(
                         f"[ERROR] Unexpected error while downloading {pdf_url}. "
                         f"Retrying after delay. Details: {error}"
@@ -210,7 +211,7 @@ def main() -> None:
             print(
                 f"[ERROR] Failed to fetch or process page {page_number}. Details: {error}"
             )
-            time.sleep(10)
+            time.sleep(60)  # Wait before retrying next page
 
     # After downloading all pages, validate PDFs
     pdf_files = list_files_with_extension(pdf_download_directory, ".pdf")
