@@ -35,20 +35,6 @@ jobs:
         with:
           python-version: "3.13"
 
-      # Commit and push any file changes made by the script
-      - name: Push updated files
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git pull
-          rm -rf PDFs/
-          git checkout --orphan latest_branch
-          git add -A
-          git commit -am "Initial commit (reset history)"
-          git branch -D main
-          git branch -m main
-          git push -f origin main
-
       # Install Python dependencies
       - name: Install dependencies
         run: pip install -r requirements.txt
