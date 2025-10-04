@@ -39,14 +39,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Run the app
-      - name: Run the app
-        run: |
-          git config user.name "github-actions"  # Set Git username for commit
-          git config user.email "github-actions@github.com"  # Set Git email for commit
-          bash uploader.sh &
-          python main.py
-
       # Run the Python script
       - name: Run Python script
         run: python main.py
