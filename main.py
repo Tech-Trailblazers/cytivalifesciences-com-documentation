@@ -108,7 +108,7 @@ def download_pdf_file(pdf_url: str, save_directory: str) -> None:
 
     parsed_url = urllib.parse.urlparse(pdf_url)  # Parse URL
     raw_filename = os.path.basename(parsed_url.path)  # Extract file name from URL path
-    safe_filename = sanitize_filename(raw_filename)  # Sanitize file name
+    safe_filename.lower() = sanitize_filename(raw_filename)  # Sanitize file name
     if safe_filename == "":
         print(
             f"[WARNING] Skipped download (invalid url) {pdf_url} (invalid filename): {raw_filename}"
