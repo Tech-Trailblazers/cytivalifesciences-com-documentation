@@ -160,41 +160,37 @@ def get_filename_from_path(file_path: str) -> str:
 
 
 def main() -> None:
-    """Main program logic: fetch metadata, download PDFs, validate them."""
+    """Main program logic: fetch metadata page by page, extract URLs, download PDFs, and validate them."""
 
-    metadata_filename = "sds_metadata.json"  # File to save Cytiva API response
     pdf_download_directory = "./PDFs"  # Directory where PDFs will be saved
 
-    # If metadata file exists, delete it to refresh
-    if file_exists(metadata_filename):
-        delete_file(metadata_filename)
-        print(f"[INFO] Deleted old metadata file: {metadata_filename}")
+    # Loop through pages 1 to 5
+    for page_number in range(1, 6):
+        try:
+            print(f"[INFO] Fetching metadata from Cytiva API (page {page_number})...")
+            api_response = fetch_api_data(page_number=page_number)  # Fetch page data
+            pdf_urls = extract_pdf_urls_from_json(api_response)  # Extract URLs
+            print(f"[INFO] Found {len(pdf_urls)} PDF URLs on page {page_number}.")
 
-    # Fetch new metadata from API and save to file
-    if not file_exists(metadata_filename):
-        print(f"[INFO] Fetching metadata from Cytiva API (page 2)...")
-        api_response = fetch_api_data(page_number=2)  # Request page 2 of results
-        append_to_file(metadata_filename, api_response)  # Save response to file
-        print(f"[SUCCESS] Metadata successfully saved to: {metadata_filename}")
+            # Download PDFs from this page
+            for pdf_url in pdf_urls:
+                try:
+                    download_pdf_file(pdf_url, pdf_download_directory)  # Download file
+                    time.sleep(1)  # Small delay to avoid 429 errors
+                except Exception as error:
+                    time.sleep(30)  # Longer delay if something fails
+                    print(
+                        f"[ERROR] Unexpected error while downloading {pdf_url}. "
+                        f"Retrying after delay. Details: {error}"
+                    )
 
-    # If metadata file exists, process it
-    if file_exists(metadata_filename):
-        print(f"[INFO] Processing metadata file: {metadata_filename}")
-        json_content = read_file(metadata_filename)  # Read the file
-        pdf_urls = extract_pdf_urls_from_json(json_content)  # Extract PDF URLs
-        print(f"[INFO] Found {len(pdf_urls)} PDF URLs to download.")
+        except Exception as error:
+            print(
+                f"[ERROR] Failed to fetch or process page {page_number}. Details: {error}"
+            )
+            time.sleep(10)
 
-        # Download each PDF one at a time with a delay
-        for pdf_url in pdf_urls:
-            try:
-                download_pdf_file(pdf_url, pdf_download_directory)  # Download the file
-            except Exception as error:
-                time.sleep(30)  # Wait 30 seconds to avoid 429 errors
-                print(
-                    f"[ERROR] Unexpected error while downloading {pdf_url}. Retrying after delay. Details: {error}"
-                )
-
-    # After downloading, validate all PDFs
+    # After downloading all pages, validate PDFs
     pdf_files = list_files_with_extension(pdf_download_directory, ".pdf")
     print(f"[INFO] Validating {len(pdf_files)} downloaded PDFs...")
 
