@@ -176,7 +176,6 @@ def main() -> None:
             for pdf_url in pdf_urls:
                 try:
                     download_pdf_file(pdf_url, pdf_download_directory)  # Download file
-                    time.sleep(1)  # Small delay to avoid 429 errors
                 except Exception as error:
                     time.sleep(30)  # Longer delay if something fails
                     print(
